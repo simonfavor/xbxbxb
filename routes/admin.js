@@ -49,7 +49,7 @@ router.get('/users', async (req, res) => {
 });
 
 // Get all transactions with filtering
-router.get('/transactions', authMiddleware, async (req, res) => {
+router.get('/transactions', async (req, res) => {
     try {
       const { status, type } = req.query;
       let result = [];
@@ -98,7 +98,7 @@ router.get('/transactions', authMiddleware, async (req, res) => {
   });
   
 // Update transaction status - needs to handle both types
-router.put('/transactions/:id', authMiddleware, async (req, res) => {
+router.put('/transactions/:id', async (req, res) => {
 try {
     const { status, transactionType } = req.body;
     let updatedItem;
