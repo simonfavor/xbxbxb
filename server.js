@@ -1,5 +1,5 @@
 const express = require('express');
-const dotenv = require('dotenv');
+require('dotenv').config();
 const cors = require('cors');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
@@ -11,7 +11,6 @@ const adminRoutes = require('./routes/admin');
 const walletroutes = require('./routes/wallets')
 const path = require('path');
 
-dotenv.config();
 const app = express();
 connectDB();
 

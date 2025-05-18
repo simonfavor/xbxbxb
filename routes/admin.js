@@ -12,230 +12,15 @@ const Wallet = require('../models/Wallet');
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
-  service: 'smtp.zoho.com',
   host: "smtp.zoho.com",
   port: 465,
   secure: true,
-  logger: true,
-  debug: true,
-  secureConnection: false,
   auth: {
-    user: process.Zoho_User, 
-    pass: process.Zoho_Pass, 
+    user: 'gnfcontact@zohomail.com', 
+    pass: 'K9XscvTZJ32e', 
   },
 });
 
-
-// Transaction Status Update Email Template
-function getTransactionStatusEmailHTML(user, transactionData, isWithdrawal = false) {
-  const isApproved = transactionData.status === 'Completed';
-  const actionType = isWithdrawal ? 'Withdrawal' : transactionData.type;
-  
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <title>Transaction ${isApproved ? 'Approved' : 'Rejected'} - GNF Invest</title>
-      <style>
-        body {
-          font-family: 'Arial', sans-serif;
-          line-height: 1.6;
-          color: #333;
-          max-width: 600px;
-          margin: 0 auto;
-          padding: 20px;
-        }
-        .header {
-          text-align: center;
-          padding: 20px 0;
-        }
-        .logo {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 20px;
-        }
-        .logo-circle {
-          width: 40px;
-          height: 40px;
-          background-color: #F59E0B;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-right: 10px;
-        }
-        .logo-text {
-          font-size: 24px;
-          font-weight: bold;
-          color: #000;
-        }
-        .logo-text span {
-          color: #F59E0B;
-        }
-        .content {
-          background-color: #f9f9f9;
-          padding: 25px;
-          border-radius: 8px;
-          margin: 20px 0;
-        }
-        .button {
-          display: inline-block;
-          padding: 12px 24px;
-          background-color: #0D9488;
-          color: white;
-          text-decoration: none;
-          border-radius: 50px;
-          font-weight: bold;
-          margin: 15px 0;
-        }
-        .highlight {
-          color: #0D9488;
-          font-weight: bold;
-        }
-        .footer {
-          text-align: center;
-          font-size: 12px;
-          color: #777;
-          margin-top: 30px;
-        }
-        .status-card {
-          background-color: ${isApproved ? '#e6f7f6' : '#ffebee'};
-          padding: 20px;
-          border-radius: 8px;
-          margin: 20px 0;
-          border-left: 4px solid ${isApproved ? '#0D9488' : '#f44336'};
-          text-align: center;
-        }
-        .status-icon {
-          font-size: 48px;
-          color: ${isApproved ? '#0D9488' : '#f44336'};
-          margin-bottom: 15px;
-        }
-        .transaction-details {
-          background-color: white;
-          padding: 15px;
-          border-radius: 8px;
-          margin: 15px 0;
-        }
-        .detail-row {
-          display: flex;
-          justify-content: space-between;
-          margin: 10px 0;
-        }
-        .detail-label {
-          font-weight: bold;
-        }
-        .next-steps {
-          background-color: #fff4e5;
-          padding: 15px;
-          border-radius: 8px;
-          margin: 15px 0;
-          border-left: 4px solid #F59E0B;
-        }
-        .illustration {
-          text-align: center;
-          margin: 20px 0;
-        }
-        .illustration img {
-          max-width: 200px;
-          height: auto;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <div class="logo">
-          <div class="logo-circle">
-            <span style="color: #0D9488; font-weight: bold; font-size: 14px;">GNF</span>
-          </div>
-          <div class="logo-text"><span>GNF</span> Invest</div>
-        </div>
-      </div>
-      
-      <div class="content">
-        <div class="illustration">
-          <!-- Placeholder for illustration - in production, use actual image URL -->
-          <div style="background-color: ${isApproved ? '#0D9488' : '#f44336'}; color: white; width: 150px; height: 150px; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 60px;">
-            ${isApproved ? '✓' : '✗'}
-          </div>
-          <p style="margin-top: 10px; font-weight: bold;">
-            ${isApproved ? 'Transaction Approved!' : 'Transaction Rejected'}
-          </p>
-        </div>
-        
-        <div class="status-card">
-          <div class="status-icon">${isApproved ? '✓' : '✗'}</div>
-          <h2 style="margin-top: 0;">${actionType} ${isApproved ? 'Approved' : 'Rejected'}</h2>
-          <p>Your ${actionType.toLowerCase()} request has been ${isApproved ? 'successfully processed' : 'rejected'}.</p>
-        </div>
-        
-        <p>Dear ${user.firstName},</p>
-        
-        <div class="transaction-details">
-          <h3 style="margin-top: 0;">Transaction Details:</h3>
-          <div class="detail-row">
-            <span class="detail-label">Type:</span>
-            <span>${actionType}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Amount:</span>
-            <span>${transactionData.amount} ${isWithdrawal ? transactionData.cryptoCurrency : 'USD'}</span>
-          </div>
-          ${isWithdrawal ? `
-          <div class="detail-row">
-            <span class="detail-label">Wallet Address:</span>
-            <span style="word-break: break-all;">${transactionData.walletAddress}</span>
-          </div>
-          ` : ''}
-          <div class="detail-row">
-            <span class="detail-label">Status:</span>
-            <span style="color: ${isApproved ? '#0D9488' : '#f44336'}; font-weight: bold;">
-              ${transactionData.status}
-            </span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Date Processed:</span>
-            <span>${new Date().toLocaleString()}</span>
-          </div>
-          ${!isApproved ? `
-          <div class="detail-row">
-            <span class="detail-label">Reason:</span>
-            <span>${transactionData.reason || 'Please contact support for details'}</span>
-          </div>
-          ` : ''}
-        </div>
-        
-        ${isApproved ? `
-        <p>${isWithdrawal ? 'The funds have been sent to your specified wallet address and should arrive shortly.' : 'Your transaction has been successfully completed.'}</p>
-        ` : `
-        <div class="next-steps">
-          <h3 style="margin-top: 0;">Next Steps:</h3>
-          <p>If you believe this was a mistake or need assistance, please:</p>
-          <ol>
-            <li>Review your transaction details</li>
-            <li>Contact our support team at <span class="highlight">support@gnfinvest.com</span></li>
-            <li>Include your transaction ID: ${transactionData._id}</li>
-          </ol>
-        </div>
-        `}
-        
-        <div style="text-align: center;">
-          <a href="https://gnfinvest.com/dashboard/transactions" class="button">View Transaction Details</a>
-        </div>
-        
-        <p>Thank you for using GNF Invest. We're committed to providing you with transparent and secure financial services.</p>
-      </div>
-      
-      <div class="footer">
-        <p>© 2023 GNF Invest. All rights reserved.</p>
-        <p>This email confirms your transaction status update. Please keep it for your records.</p>
-      </div>
-    </body>
-    </html>
-  `;
-}
 
 // Admin login
 router.post('/login', async (req, res) => {
@@ -335,7 +120,7 @@ router.put('/transactions/:id', async (req, res) => {
     if (transactionType === 'Withdrawal') {
       updatedItem = await Withdrawal.findById(req.params.id);
       if (!updatedItem) {
-        return res.status(404).json({ message: 'Withdrawal not found' });
+        return res.status(404).json({ success: false, message: 'Withdrawal not found' });
       }
       
       // Update withdrawal status
@@ -343,20 +128,105 @@ router.put('/transactions/:id', async (req, res) => {
       if (reason) updatedItem.reason = reason;
       await updatedItem.save();
 
-      // Send status update email
+      // Get user details
       const user = await User.findById(updatedItem.user);
+      if (!user) {
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+
+      // Format amount
+      const formattedAmount = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+      }).format(updatedItem.amount);
+
+      // Withdrawal status email template
+      const withdrawalHtmlTemplate = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e1e1e1; border-radius: 8px; overflow: hidden;">
+          <!-- Header -->
+          <div style="background-color: ${status === 'Completed' ? '#0D9488' : '#dc2626'}; padding: 25px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">
+              Withdrawal ${status === 'Completed' ? 'Approved' : 'Rejected'}
+            </h1>
+          </div>
+          
+          <!-- Body -->
+          <div style="padding: 25px;">
+            <p>Dear ${user.firstName},</p>
+            
+            <p>Your withdrawal request has been <strong>${status === 'Completed' ? 'approved' : 'rejected'}</strong>.</p>
+            
+            <div style="background-color: #f8fafc; border-radius: 6px; padding: 20px; margin: 20px 0; border-left: 4px solid #F59E0B;">
+              <h3 style="margin-top: 0; color: #0D9488;">Withdrawal Details</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0; color: #666;">Amount:</td>
+                  <td style="padding: 8px 0; font-weight: bold;">${formattedAmount}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #666;">Method:</td>
+                  <td style="padding: 8px 0; font-weight: bold;">${updatedItem.cryptoCurrency}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #666;">Status:</td>
+                  <td style="padding: 8px 0; font-weight: bold; color: ${status === 'Completed' ? '#0D9488' : '#dc2626'};">
+                    ${status === 'Completed' ? 'Completed' : 'Rejected'}
+                  </td>
+                </tr>
+                ${status !== 'Completed' ? `
+                <tr>
+                  <td style="padding: 8px 0; color: #666;">Reason:</td>
+                  <td style="padding: 8px 0; font-weight: bold;">${reason || 'Not specified'}</td>
+                </tr>
+                ` : ''}
+              </table>
+            </div>
+            
+            ${status === 'Completed' ? `
+            <p>Your funds should arrive in your wallet within <strong>1-3 business days</strong>.</p>
+            ` : `
+            <p>If you believe this was a mistake or need clarification, please contact our support team.</p>
+            `}
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${process.env.CLIENT_URL}/dashboard/transactions" 
+                 style="background-color: #F59E0B; color: white; padding: 12px 30px; 
+                        text-decoration: none; border-radius: 4px; font-weight: bold; 
+                        display: inline-block; font-size: 16px;">
+                View Transaction
+              </a>
+            </div>
+            
+            <!-- Contact Section -->
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+              <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #0D9488;">Need Help?</h3>
+              <p style="color: #666; margin-bottom: 8px;">123 Street, Finance City, FC 12345</p>
+              <p style="color: #666; margin-bottom: 8px;">Phone: +1 (555) 123-4567</p>
+              <p style="color: #666; margin-bottom: 0;">Email: support@gnf.com</p>
+            </div>
+          </div>
+          
+          <!-- Footer -->
+          <div style="background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+            © ${new Date().getFullYear()} GNF. All rights reserved.
+          </div>
+        </div>
+      `;
+
+      // Send withdrawal status email
       const mailOptions = {
-        from: '"GNF Invest" <fincch@zohomail.com>',
+        from: `GNF Withdrawals <${process.env.Zoho_User}>`,
         to: user.email,
-        subject: `Withdrawal ${status === 'Completed' ? 'Approved' : 'Rejected'} - ${updatedItem.amount} ${updatedItem.cryptoCurrency}`,
-        html: getTransactionStatusEmailHTML(user, updatedItem, true),
+        subject: `Withdrawal ${status === 'Completed' ? 'Approved' : 'Rejected'} - ${formattedAmount}`,
+        html: withdrawalHtmlTemplate
       };
       await transporter.sendMail(mailOptions);
+
     } else {
-      // Otherwise handle as regular transaction
+      // Handle regular transaction (Plan Activation)
       updatedItem = await Transaction.findById(req.params.id);
       if (!updatedItem) {
-        return res.status(404).json({ message: 'Transaction not found' });
+        return res.status(404).json({ success: false, message: 'Transaction not found' });
       }
       
       // Update transaction status
@@ -365,29 +235,129 @@ router.put('/transactions/:id', async (req, res) => {
       await updatedItem.save();
       
       // If this is a plan activation transaction, also update the plan status
+      let plan;
       if (updatedItem.type === 'Plan Activation' && updatedItem.plan) {
-        const plan = await Plan.findById(updatedItem.plan);
+        plan = await Plan.findById(updatedItem.plan);
         if (plan) {
           plan.status = status === 'Completed' ? 'Active' : 'Failed';
           await plan.save();
         }
       }
 
-      // Send status update email
+      // Get user details
       const user = await User.findById(updatedItem.user);
+      if (!user) {
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+
+      // Format amount
+      const formattedAmount = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+      }).format(updatedItem.amount);
+
+      // Plan status email template
+      const planHtmlTemplate = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e1e1e1; border-radius: 8px; overflow: hidden;">
+          <!-- Header -->
+          <div style="background-color: ${status === 'Completed' ? '#0D9488' : '#dc2626'}; padding: 25px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">
+              Plan ${status === 'Completed' ? 'Approved' : 'Rejected'}
+            </h1>
+          </div>
+          
+          <!-- Body -->
+          <div style="padding: 25px;">
+            <p>Dear ${user.firstName},</p>
+            
+            <p>Your ${updatedItem.type} has been <strong>${status === 'Completed' ? 'approved' : 'rejected'}</strong>.</p>
+            
+            <div style="background-color: #f8fafc; border-radius: 6px; padding: 20px; margin: 20px 0; border-left: 4px solid #F59E0B;">
+              <h3 style="margin-top: 0; color: #0D9488;">Transaction Details</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0; color: #666;">Type:</td>
+                  <td style="padding: 8px 0; font-weight: bold;">${updatedItem.type}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #666;">Amount:</td>
+                  <td style="padding: 8px 0; font-weight: bold;">${formattedAmount}</td>
+                </tr>
+                ${plan ? `
+                <tr>
+                  <td style="padding: 8px 0; color: #666;">Plan:</td>
+                  <td style="padding: 8px 0; font-weight: bold;">${plan.type}</td>
+                </tr>
+                ` : ''}
+                <tr>
+                  <td style="padding: 8px 0; color: #666;">Status:</td>
+                  <td style="padding: 8px 0; font-weight: bold; color: ${status === 'Completed' ? '#0D9488' : '#dc2626'};">
+                    ${status === 'Completed' ? 'Completed' : 'Rejected'}
+                  </td>
+                </tr>
+                ${status !== 'Completed' ? `
+                <tr>
+                  <td style="padding: 8px 0; color: #666;">Reason:</td>
+                  <td style="padding: 8px 0; font-weight: bold;">${reason || 'Not specified'}</td>
+                </tr>
+                ` : ''}
+              </table>
+            </div>
+            
+            ${status === 'Completed' ? `
+            <p>Your plan is now active and will start earning returns according to the terms.</p>
+            ` : `
+            <p>If you believe this was a mistake or need clarification, please contact our support team.</p>
+            `}
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${process.env.CLIENT_URL}/dashboard/${plan ? 'plans' : 'transactions'}" 
+                 style="background-color: #F59E0B; color: white; padding: 12px 30px; 
+                        text-decoration: none; border-radius: 4px; font-weight: bold; 
+                        display: inline-block; font-size: 16px;">
+                View ${plan ? 'Plan' : 'Transaction'}
+              </a>
+            </div>
+            
+            <!-- Contact Section -->
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+              <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #0D9488;">Need Help?</h3>
+              <p style="color: #666; margin-bottom: 8px;">123 Street, Finance City, FC 12345</p>
+              <p style="color: #666; margin-bottom: 8px;">Phone: +1 (555) 123-4567</p>
+              <p style="color: #666; margin-bottom: 0;">Email: support@gnf.com</p>
+            </div>
+          </div>
+          
+          <!-- Footer -->
+          <div style="background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+            © ${new Date().getFullYear()} GNF. All rights reserved.
+          </div>
+        </div>
+      `;
+
+      // Send plan status email
       const mailOptions = {
-        from: '"GNF Invest" <fincch@zohomail.com>',
+        from: `GNF Plans <${process.env.Zoho_User}>`,
         to: user.email,
-        subject: `Transaction ${status === 'Completed' ? 'Approved' : 'Rejected'} - ${updatedItem.type}`,
-        html: getTransactionStatusEmailHTML(user, updatedItem),
+        subject: `Plan ${status === 'Completed' ? 'Approved' : 'Rejected'} - ${updatedItem.type}`,
+        html: planHtmlTemplate
       };
       await transporter.sendMail(mailOptions);
     }
     
-    res.json({ message: 'Transaction updated', transaction: updatedItem });
+    res.json({ 
+      success: true,
+      message: `Transaction ${status === 'Completed' ? 'approved' : 'rejected'} successfully`,
+      transaction: updatedItem
+    });
+
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Transaction update error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error updating transaction status',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 

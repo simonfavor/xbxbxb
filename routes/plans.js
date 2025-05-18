@@ -3,383 +3,21 @@ const router = express.Router();
 const authMiddleware = require('../middleware/auth');
 const Plan = require('../models/Plan');
 const Transaction = require('../models/Transaction');
+const User = require('../models/User');
 
 
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
-  service: 'smtp.zoho.com',
   host: "smtp.zoho.com",
   port: 465,
   secure: true,
-  logger: true,
-  debug: true,
-  secureConnection: false,
   auth: {
-    user: process.Zoho_User, 
-    pass: process.Zoho_Pass, 
+    user: 'gnfcontact@zohomail.com', 
+    pass: 'K9XscvTZJ32e', 
   },
 });
 
-
-// Add these template functions to your existing email templates
-function getPlanSelectedEmailHTML(user, planData) {
-  const planInfo = investmentPlans.find(p => p.name === planData.type);
-  const planColor = planInfo ? planInfo.color : 'from-primary to-secondary';
-  
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <title>Investment Plan Selected - GNF Invest</title>
-      <style>
-        body {
-          font-family: 'Arial', sans-serif;
-          line-height: 1.6;
-          color: #333;
-          max-width: 600px;
-          margin: 0 auto;
-          padding: 20px;
-        }
-        .header {
-          text-align: center;
-          padding: 20px 0;
-        }
-        .logo {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 20px;
-        }
-        .logo-circle {
-          width: 40px;
-          height: 40px;
-          background-color: #F59E0B;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-right: 10px;
-        }
-        .logo-text {
-          font-size: 24px;
-          font-weight: bold;
-          color: #000;
-        }
-        .logo-text span {
-          color: #F59E0B;
-        }
-        .content {
-          background-color: #f9f9f9;
-          padding: 25px;
-          border-radius: 8px;
-          margin: 20px 0;
-        }
-        .button {
-          display: inline-block;
-          padding: 12px 24px;
-          background-color: #0D9488;
-          color: white;
-          text-decoration: none;
-          border-radius: 50px;
-          font-weight: bold;
-          margin: 15px 0;
-        }
-        .highlight {
-          color: #0D9488;
-          font-weight: bold;
-        }
-        .footer {
-          text-align: center;
-          font-size: 12px;
-          color: #777;
-          margin-top: 30px;
-        }
-        .plan-card {
-          background: linear-gradient(to right, #0D9488, #F59E0B);
-          color: white;
-          padding: 20px;
-          border-radius: 8px;
-          margin: 20px 0;
-        }
-        .plan-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 15px;
-        }
-        .plan-name {
-          font-size: 22px;
-          font-weight: bold;
-          margin: 0;
-        }
-        .plan-amount {
-          font-size: 20px;
-          font-weight: bold;
-        }
-        .plan-details {
-          margin: 15px 0;
-        }
-        .detail-row {
-          display: flex;
-          justify-content: space-between;
-          margin: 10px 0;
-        }
-        .detail-label {
-          font-weight: bold;
-        }
-        .next-steps {
-          background-color: #fff4e5;
-          padding: 15px;
-          border-radius: 8px;
-          margin: 15px 0;
-          border-left: 4px solid #F59E0B;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <div class="logo">
-          <div class="logo-circle">
-            <span style="color: #0D9488; font-weight: bold; font-size: 14px;">GNF</span>
-          </div>
-          <div class="logo-text"><span>GNF</span> Invest</div>
-        </div>
-        <h1>Your Investment Plan is Ready!</h1>
-      </div>
-      
-      <div class="content">
-        <p>Dear ${user.firstName},</p>
-        
-        <p>Thank you for selecting the <span class="highlight">${planData.type}</span> investment plan with GNF Invest. We're excited to help you grow your wealth!</p>
-        
-        <div class="plan-card">
-          <div class="plan-header">
-            <h2 class="plan-name">${planData.type}</h2>
-            <div class="plan-amount">$${planData.amount}</div>
-          </div>
-          
-          <div class="plan-details">
-            <div class="detail-row">
-              <span class="detail-label">Expected ROI:</span>
-              <span>${planData.roi}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Withdrawal Period:</span>
-              <span>${planData.withdrawalPeriod}</span>
-            </div>
-            ${planInfo ? `
-            <div class="detail-row">
-              <span class="detail-label">Plan Features:</span>
-              <span></span>
-            </div>
-            <ul style="margin-top: 5px; padding-left: 20px;">
-              ${planInfo.features.map(feature => `<li>${feature}</li>`).join('')}
-            </ul>
-            ` : ''}
-          </div>
-        </div>
-        
-        <div class="next-steps">
-          <h3 style="margin-top: 0;">Next Steps:</h3>
-          <ol>
-            <li>Complete your payment to activate the plan</li>
-            <li>Monitor your investment dashboard for updates</li>
-            <li>Receive your first returns in ${planData.withdrawalPeriod}</li>
-          </ol>
-        </div>
-        
-        <p>To complete your investment and activate your plan, please proceed with the payment:</p>
-        
-        <div style="text-align: center;">
-          <a href="https://gnfinvest.com/complete-payment/${planData._id}" class="button">Complete Payment Now</a>
-        </div>
-        
-        <p>If you have any questions about your investment plan, our team is available 24/7 at <span class="highlight">support@gnfinvest.com</span>.</p>
-        
-        <p>We're committed to helping you achieve your financial goals through our innovative investment strategies.</p>
-      </div>
-      
-      <div class="footer">
-        <p>© 2023 GNF Invest. All rights reserved.</p>
-        <p>This email confirms your investment plan selection. Your plan will be activated upon payment confirmation.</p>
-      </div>
-    </body>
-    </html>
-  `;
-}
-
-function getPaymentConfirmedEmailHTML(user, planData) {
-  const planInfo = investmentPlans.find(p => p.name === planData.type);
-  
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <title>Payment Confirmed - GNF Invest</title>
-      <style>
-        body {
-          font-family: 'Arial', sans-serif;
-          line-height: 1.6;
-          color: #333;
-          max-width: 600px;
-          margin: 0 auto;
-          padding: 20px;
-        }
-        .header {
-          text-align: center;
-          padding: 20px 0;
-        }
-        .logo {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 20px;
-        }
-        .logo-circle {
-          width: 40px;
-          height: 40px;
-          background-color: #F59E0B;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-right: 10px;
-        }
-        .logo-text {
-          font-size: 24px;
-          font-weight: bold;
-          color: #000;
-        }
-        .logo-text span {
-          color: #F59E0B;
-        }
-        .content {
-          background-color: #f9f9f9;
-          padding: 25px;
-          border-radius: 8px;
-          margin: 20px 0;
-        }
-        .button {
-          display: inline-block;
-          padding: 12px 24px;
-          background-color: #0D9488;
-          color: white;
-          text-decoration: none;
-          border-radius: 50px;
-          font-weight: bold;
-          margin: 15px 0;
-        }
-        .highlight {
-          color: #0D9488;
-          font-weight: bold;
-        }
-        .footer {
-          text-align: center;
-          font-size: 12px;
-          color: #777;
-          margin-top: 30px;
-        }
-        .success-card {
-          background-color: #e6f7f6;
-          padding: 20px;
-          border-radius: 8px;
-          margin: 20px 0;
-          border-left: 4px solid #0D9488;
-          text-align: center;
-        }
-        .checkmark {
-          font-size: 48px;
-          color: #0D9488;
-          margin-bottom: 15px;
-        }
-        .plan-summary {
-          background-color: white;
-          padding: 15px;
-          border-radius: 8px;
-          margin: 15px 0;
-        }
-        .detail-row {
-          display: flex;
-          justify-content: space-between;
-          margin: 10px 0;
-        }
-        .detail-label {
-          font-weight: bold;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <div class="logo">
-          <div class="logo-circle">
-            <span style="color: #0D9488; font-weight: bold; font-size: 14px;">GNF</span>
-          </div>
-          <div class="logo-text"><span>GNF</span> Invest</div>
-        </div>
-      </div>
-      
-      <div class="content">
-        <div class="success-card">
-          <div class="checkmark">✓</div>
-          <h2 style="margin-top: 0;">Payment Confirmed!</h2>
-          <p>Your investment in the <span class="highlight">${planData.type}</span> plan is now active.</p>
-        </div>
-        
-        <p>Dear ${user.firstName},</p>
-        
-        <p>We're pleased to inform you that your payment of <span class="highlight">$${planData.amount}</span> has been successfully processed, and your investment plan is now active.</p>
-        
-        <div class="plan-summary">
-          <h3 style="margin-top: 0;">Investment Details:</h3>
-          <div class="detail-row">
-            <span class="detail-label">Plan Type:</span>
-            <span>${planData.type}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Investment Amount:</span>
-            <span>$${planData.amount}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Expected ROI:</span>
-            <span>${planData.roi}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Withdrawal Period:</span>
-            <span>${planData.withdrawalPeriod}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Activation Date:</span>
-            <span>${new Date().toLocaleDateString()}</span>
-          </div>
-        </div>
-        
-        <p>What to expect next:</p>
-        <ul>
-          <li>Your investment will begin generating returns immediately</li>
-          <li>You'll receive regular performance updates</li>
-          <li>Your first withdrawal will be available in ${planData.withdrawalPeriod}</li>
-        </ul>
-        
-        <div style="text-align: center;">
-          <a href="https://gnfinvest.com/dashboard" class="button">View Your Dashboard</a>
-        </div>
-        
-        <p>Our team is monitoring your investment and will ensure it performs according to our high standards. If you have any questions, please contact us at <span class="highlight">support@gnfinvest.com</span>.</p>
-        
-        <p>Thank you for trusting GNF Invest with your financial future!</p>
-      </div>
-      
-      <div class="footer">
-        <p>© 2023 GNF Invest. All rights reserved.</p>
-        <p>This email confirms your successful payment and plan activation. Please keep it for your records.</p>
-      </div>
-    </body>
-    </html>
-  `;
-}
 
 // Get user's plans
 router.get('/', authMiddleware, async (req, res) => {
@@ -396,9 +34,9 @@ router.get('/', authMiddleware, async (req, res) => {
 // Select a plan (updated with email)
 router.post('/', authMiddleware, async (req, res) => {
   const { type, amount, roi, withdrawalPeriod } = req.body;
-  console.log(req.body)
 
   try {
+    // Create new plan
     const plan = new Plan({
       user: req.user._id,
       type,
@@ -408,6 +46,7 @@ router.post('/', authMiddleware, async (req, res) => {
     });
     await plan.save();
 
+    // Record transaction
     const transaction = new Transaction({
       user: req.user._id,
       type: 'Plan Activation',
@@ -417,53 +56,261 @@ router.post('/', authMiddleware, async (req, res) => {
     });
     await transaction.save();
 
-    // Send plan selected email
+    // Get user details
     const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Format amount for display
+    const formattedAmount = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+
+    // Prepare email template
+    const htmlTemplate = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e1e1e1; border-radius: 8px; overflow: hidden;">
+        <!-- Header -->
+        <div style="background-color: #0D9488; padding: 25px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 24px;">Your ${type} Plan is Ready!</h1>
+        </div>
+        
+        <!-- Body -->
+        <div style="padding: 25px;">
+          <p>Dear ${user.firstName},</p>
+          
+          <p>Thank you for selecting the <strong>${type}</strong> plan with GNF. Your plan details have been successfully submitted and are now pending approval.</p>
+          
+          <div style="background-color: #f8fafc; border-radius: 6px; padding: 20px; margin: 20px 0; border-left: 4px solid #F59E0B;">
+            <h3 style="margin-top: 0; color: #0D9488;">Plan Summary</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; color: #666;">Plan Type:</td>
+                <td style="padding: 8px 0; font-weight: bold;">${type}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #666;">Investment Amount:</td>
+                <td style="padding: 8px 0; font-weight: bold;">${formattedAmount}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #666;">Estimated ROI:</td>
+                <td style="padding: 8px 0; font-weight: bold;">${roi}%</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #666;">Withdrawal Period:</td>
+                <td style="padding: 8px 0; font-weight: bold;">${withdrawalPeriod}</td>
+              </tr>
+            </table>
+          </div>
+          
+          <p style="font-weight: bold; color: #0D9488;">Next Steps:</p>
+          <ol style="padding-left: 20px; color: #555;">
+            <li>Complete your payment to activate the plan</li>
+            <li>Our team will review your submission (1-2 business days)</li>
+            <li>You'll receive a confirmation email once approved</li>
+          </ol>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.CLIENT_URL}/dashboard/plans/${plan._id}" 
+               style="background-color: #F59E0B; color: white; padding: 12px 30px; 
+                      text-decoration: none; border-radius: 4px; font-weight: bold; 
+                      display: inline-block; font-size: 16px;">
+              Complete Payment
+            </a>
+          </div>
+          
+          <!-- Contact Section -->
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+            <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #0D9488;">Need Help?</h3>
+            <p style="color: #666; margin-bottom: 8px;">123 Street, Finance City, FC 12345</p>
+            <p style="color: #666; margin-bottom: 8px;">Phone: +1 (555) 123-4567</p>
+            <p style="color: #666; margin-bottom: 0;">Email: support@gnf.com</p>
+          </div>
+        </div>
+        
+        <!-- Footer -->
+        <div style="background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+          © ${new Date().getFullYear()} GNF. All rights reserved.
+        </div>
+      </div>
+    `;
+
+    // Send email
     const mailOptions = {
-      from: '"GNF Invest" <fincch@zohomail.com>',
+      from: `GNF Plans <${process.env.Zoho_User}>`,
       to: user.email,
-      subject: `Your ${type} Investment Plan is Ready - Complete Payment`,
-      html: getPlanSelectedEmailHTML(user, { ...plan.toObject(), _id: plan._id }),
+      subject: `Action Required: Complete Payment for Your ${type} Plan`,
+      html: htmlTemplate
     };
+
     await transporter.sendMail(mailOptions);
 
-    res.status(201).json({ plan, transaction });
+    res.status(201).json({ 
+      success: true,
+      message: 'Plan created successfully. Please check your email for next steps.',
+      plan,
+      transaction 
+    });
+
   } catch (error) {
-    console.log(error)
-    res.status(500).json({ message: 'Server error' });
+    console.error('Plan creation error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error creating plan',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
 // Simulate payment confirmation (updated with email)
 router.post('/confirm-payment/:planId', authMiddleware, async (req, res) => {
   try {
+    // Find and validate plan
     const plan = await Plan.findById(req.params.planId);
-    if (!plan || plan.user.toString() !== req.user._id) {
-        console.log('Plan not found')
-      return res.status(404).json({ message: 'Plan not found' });
+    if (!plan || plan.user.toString() !== req.user._id.toString()) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Plan not found or unauthorized' 
+      });
     }
 
+    // Update plan status
     plan.status = 'Active';
+    plan.activationDate = new Date();
     await plan.save();
 
-    const transaction = await Transaction.findOne({ plan: plan._id, type: 'Plan Activation' });
-    transaction.status = 'Completed';
-    await transaction.save();
+    // Update transaction status
+    const transaction = await Transaction.findOneAndUpdate(
+      { plan: plan._id, type: 'Plan Activation' },
+      { status: 'Completed', processedAt: new Date() },
+      { new: true }
+    );
 
-    // Send payment confirmed email
+    if (!transaction) {
+      return res.status(404).json({
+        success: false,
+        message: 'Transaction not found'
+      });
+    }
+
+    // Get user details
     const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Format dates and amounts
+    const formattedAmount = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(plan.amount);
+
+    const activationDate = plan.activationDate.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    // Payment confirmation email template
+    const htmlTemplate = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e1e1e1; border-radius: 8px; overflow: hidden;">
+        <!-- Header -->
+        <div style="background-color: #0D9488; padding: 25px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 24px;">Payment Confirmed!</h1>
+        </div>
+        
+        <!-- Body -->
+        <div style="padding: 25px;">
+          <p>Dear ${user.firstName},</p>
+          
+          <p>We've successfully received your payment of <strong>${formattedAmount}</strong> for your <strong>${plan.type}</strong> plan. Your investment is now being processed.</p>
+          
+          <div style="background-color: #f8fafc; border-radius: 6px; padding: 20px; margin: 20px 0; border-left: 4px solid #F59E0B;">
+            <h3 style="margin-top: 0; color: #0D9488;">Plan Activation Details</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; color: #666;">Plan Type:</td>
+                <td style="padding: 8px 0; font-weight: bold;">${plan.type}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #666;">Investment Amount:</td>
+                <td style="padding: 8px 0; font-weight: bold;">${formattedAmount}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #666;">Activation Date:</td>
+                <td style="padding: 8px 0; font-weight: bold;">${activationDate}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #666;">Plan Status:</td>
+                <td style="padding: 8px 0; font-weight: bold; color: #0D9488;">Active (Pending Final Approval)</td>
+              </tr>
+            </table>
+          </div>
+          
+          <p style="font-weight: bold; color: #0D9488;">What to Expect Next:</p>
+          <ul style="padding-left: 20px; color: #555;">
+            <li>Our team is verifying your payment details</li>
+            <li>You'll receive a final approval notification within <strong>24-48 hours</strong></li>
+            <li>Your investment will start earning returns after final approval</li>
+          </ul>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.CLIENT_URL}/dashboard/plans/${plan._id}" 
+               style="background-color: #F59E0B; color: white; padding: 12px 30px; 
+                      text-decoration: none; border-radius: 4px; font-weight: bold; 
+                      display: inline-block; font-size: 16px;">
+              View Your Plan
+            </a>
+          </div>
+          
+          <p style="font-size: 14px; color: #666; border-left: 3px solid #F59E0B; padding-left: 10px;">
+            <em>Note: Your funds are secure during this verification period.</em>
+          </p>
+          
+          <!-- Contact Section -->
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+            <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #0D9488;">Need Help?</h3>
+            <p style="color: #666; margin-bottom: 8px;">123 Street, Finance City, FC 12345</p>
+            <p style="color: #666; margin-bottom: 8px;">Phone: +1 (555) 123-4567</p>
+            <p style="color: #666; margin-bottom: 0;">Email: support@gnf.com</p>
+          </div>
+        </div>
+        
+        <!-- Footer -->
+        <div style="background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+          © ${new Date().getFullYear()} GNF. All rights reserved.
+        </div>
+      </div>
+    `;
+
+    // Send confirmation email
     const mailOptions = {
-      from: '"GNF Invest" <fincch@zohomail.com>',
+      from: `GNF Payments <${process.env.Zoho_User}>`,
       to: user.email,
-      subject: `Payment Confirmed - Your ${plan.type} Plan is Now Active!`,
-      html: getPaymentConfirmedEmailHTML(user, plan),
+      subject: `Payment Received - Your ${plan.type} Plan is Being Activated`,
+      html: htmlTemplate
     };
+
     await transporter.sendMail(mailOptions);
 
-    res.json({ message: 'Payment confirmed', plan });
+    res.json({ 
+      success: true,
+      message: 'Payment confirmed successfully. You will be notified when your plan is fully approved.',
+      plan,
+      transaction
+    });
+
   } catch (error) {
-    console.log(error)
-    res.status(500).json({ message: 'Server error' });
+    console.error('Payment confirmation error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error processing payment confirmation',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
